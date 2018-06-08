@@ -10,7 +10,12 @@
 --
 ------------------------------------------------------------------
 
-local _VERSION = "0.1.1"
+local SSL = {
+  _NAME      = "lluv.ssl";
+  _VERSION   = "0.1.2";
+  _COPYRIGHT = "Copyright (C) 2015-2016 Alexey Melnichuk";
+  _LICENSE   = "MIT";
+}
 
 local trace -- = function(...) print(os.date("[SSL][%x %X]"), ...) end
 
@@ -71,6 +76,39 @@ end
 
 local unpack = table.unpack or unpack
 
+local function clone(t, o)
+  o = o or {}
+  for k, v in pairs(t) do
+    o[k] = v
+  end
+  return o
+end
+
+local verify_map = {
+  none                 = ssl.ssl.none;
+  peer                 = ssl.ssl.peer;
+  once                 = ssl.ssl.once;
+  fail                 = ssl.ssl.fail;
+  client_once          = ssl.ssl.once;
+  fail_if_no_peer_cert = ssl.ssl.fail;
+}
+
+local verify_set = {
+  [ssl.ssl.none or true] = true;
+  [ssl.ssl.peer or true] = true;
+  [ssl.ssl.once or true] = true;
+  [ssl.ssl.fail or true] = true;
+}
+verify_set[true] = nil
+
+local function verify_value(v)
+  if type(v) == "string" then
+    return assert(verify_map[v], "unknown verify value:" .. v)
+  end
+  assert(verify_set[v], "unknown verify value:" .. v)
+  return v
+end
+
 -- opt is LuaSEC compatiable table
 local function make_ctx(opt)
   local proto = opt.protocol or 'TLSv1'
@@ -105,7 +143,28 @@ local function make_ctx(opt)
   end
 
   if opt.verify then
-    ctx:verify_mode(opt.verify)
+    local flags
+
+    -- in 1.0 vesion `verify_mode` support array as flags
+    -- but after that it support only integer as flags
+    if ssl.ssl.fail and ssl.ssl.peer then
+      flags = 0
+      if type(opt.verify) ~= 'table' then
+        flags = verify_value(opt.verify)
+      else
+        for _, v in ipairs(opt.verify) do
+          flags = flags + verify_value(v)
+        end
+      end
+    else
+      flags = opt.verify
+    end
+
+    if (type(opt.verify) == 'table') and (opt.verify.callback) then
+      ctx:verify_mode(flags, opt.verify.callback)
+    else
+      ctx:verify_mode(flags)
+    end
   end
 
   if opt.options and #opt.options > 0 then
@@ -754,7 +813,8 @@ end
 
 end
 
-return {
-  _VERSION = _VERSION;
+SSL = clone(SSL, {
   context  = function(...) return SSLContext.new(...) end
-}
+})
+
+return SSL

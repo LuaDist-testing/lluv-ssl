@@ -1,18 +1,10 @@
--- This file was automatically generated for the LuaDist project.
-
 package = "lluv-ssl"
-version = "0.1.1-1"
+version = "0.1.2-1"
 
--- LuaDist source
 source = {
-  tag = "0.1.1-1",
-  url = "git://github.com/LuaDist-testing/lluv-ssl.git"
+  url = "https://github.com/moteus/lua-lluv-ssl/archive/v0.1.2.zip",
+  dir = "lua-lluv-ssl-0.1.2",
 }
--- Original source
--- source = {
---   url = "https://github.com/moteus/lua-lluv-ssl/archive/v0.1.1.zip",
---   dir = "lua-lluv-ssl-0.1.1",
--- }
 
 description = {
   summary    = "Implement SSL/TLS sockets for lluv library.",
